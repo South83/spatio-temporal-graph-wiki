@@ -12,9 +12,9 @@ This system builds a *persistent knowledge graph* indexing both semantic structu
 
 Traditional approaches to version-aware documentation have fundamental limitations:
 
-- **Directory-based versioning** duplicates content and prevents cross-version queries. 
-- **Vector search / RAG** is version-blind—embeddings don't distinguish versions, potentially mixing v2024.1 and v2024.2 content. 
-- **Manual navigation** requires detective work to find relevant files in large repositories.
+- **Directory-based versioning** - Duplicates content and prevents cross-version queries. 
+- **Vector search / RAG** - Version-blind. Embeddings don't distinguish versions, potentially mixing v2024.1 and v2024.2 content. 
+- **Manual navigation** - Requires detective work to find relevant files in large repositories.
 
 This system uses metadata filtering for precision, Git for temporal boundaries, and graph queries for intelligent entry points.
 
@@ -22,7 +22,7 @@ This system uses metadata filtering for precision, Git for temporal boundaries, 
 
 There are three layers:
 
-1. **Common Source Knowledge Base (CSKB)** - Markdown files with YAML front matter in a Git repository. Each Knowledge File is a conceptual "bucket" for content sharing identical metadata. Source content is chunked, classified, and recombined. Matching chunks merge into the same file. Files are named using deterministic metadata hashes, so identical metadata always produces the same filename. Front matter contains categories (product, domain, feature, version), relationships (prerequisites, related topics), and citation metadata (references to original sources). Content includes numbered citations that map back to source documents, providing an audit trail for verification.
+1. **Common Source Knowledge Base (CSKB)** - Markdown files with YAML front matter in a Git repository. Each Knowledge File is a conceptual "bucket" for content that shares identical metadata. Source content is chunked, classified, and recombined. Chunks with matching metadata merge into the same Knowledge File. Files are named using deterministic metadata hashes, so identical metadata always produces the same filename. Front matter contains categories (product, domain, feature, version), relationships (prerequisites, related topics), and citation metadata (references to original sources). Content includes numbered citations that map back to source documents, providing an audit trail for verification.
 
 2. **The knowledge graph** - A persistent index built incrementally during ingestion and commits, with a spatial and temporal axis: 
     - **Spatial** (files, products, domains, concepts).
@@ -32,7 +32,7 @@ Stored as YAML or in a graph database. Can be reconstructed from files and Git h
 
 3. **The query interface** - Queries the graph for relevant files by metadata and version, then reconstructs the entire CSKB in the specified state from Git. The graph then filters thousands of files to a handful of relevant ones, providing intelligent entry points which the agent can then navigate, following links and relationships while maintaining version boundaries.
 
-## Key innovations
+## Key concepts
 
 - **Content-Addressed Metadata** - Filenames are deterministic hashes of metadata. Example: `{product: X, domain: Y, type: task}` → `a7f3c9d1-0001.md`. Same metadata = same filename; different metadata = different filename. If metadata changes, the filename changes, forcing a new file. This creates stable cross-version references: file `f6e5c8d4-0007.md` in both v2024.1 and v2024.2 represents the same conceptual bucket.
 
@@ -70,7 +70,7 @@ The graph builds incrementally with each ingestion cycle. Reconstruction from Gi
 
 ### Multi-version snapshots
 
-Support customers running mixed versions. Query files by `product=Alpha, version=v2024.1` and `product=Beta, version=v2024.2` separately. Files reference each other safely via metadata-addressed filenames. Same hash means same conceptual entity across versions.
+Support customers running mixed versions. Query files by `product=Alpha, version=v2024.1` and `product=Alpha, version=v2024.2` separately. Files reference each other safely via metadata-addressed filenames. Same hash means same conceptual entity across versions.
 
 ## Why this works
 
@@ -78,19 +78,19 @@ Support customers running mixed versions. Query files by `product=Alpha, version
 - **Version safety**: No accidental mixing of version content (unless you deliberately query multiple versions)
 - **Scalability**: Graph queries over 50K files take 20-100ms
 - **Temporal queries**: Compare versions structurally via graph traversal
-- **Token efficiency**: Filter 10K files to 3-5 before loading—65-70% fewer tokens than RAG
+- **Token efficiency**: Filter 10K files to 3-5 before loading—65-70% fewer tokens than traditional RAG
 - **Verifiable**: Graph rebuilds from files; no hidden database state
 
 ## Use cases
 
-The pattern applies anywhere you need version-aware, structured knowledge with both semantic structure (what relates to what) and temporal awareness (when things existed or changed), such as:
+The pattern applies anywhere you need version-aware, structured knowledge with both semantic structure (what relates to what) and temporal awareness (when things existed or changed).
 
-- **Documentation generation**: Filter and assemble specific content for PDFs, HTML, help systems
-- **LLM context**: Provide precise, version-correct context for chatbots, support agents, code assistants  
-- **API documentation**: Generate version-specific API references
-- **Training materials**: Assemble courseware from curated knowledge
-- **Compliance reporting**: Extract audit-ready documentation with citation trails
-- **Wiki navigation**: Browse interactively (though scale may require graph-powered filtering)
+- **Documentation generation**: Filter and assemble specific content for PDFs, HTML, help systems.
+- **LLM context**: Provide precise, version-correct context for chatbots, support agents, code assistants.
+- **API documentation**: Generate version-specific API references.
+- **Training materials**: Assemble courseware from curated knowledge.
+- **Compliance reporting**: Extract audit-ready documentation with citation trails.
+- **Wiki navigation**: Browse interactively (though scale may require graph-powered filtering).
 
 The goal is a curated Common Source Knowledge Base (CSKB) that provides context for downstream tools and pipelines. A CSKB of tens of thousands of files can provide thousands of relevant, pre-approved files to multiple consumers.
 
@@ -113,12 +113,12 @@ The goal is a curated Common Source Knowledge Base (CSKB) that provides context 
 
 - **Citations and verification**: Knowledge files contain numbered citations (e.g., [1], [2]) within their content. Citation metadata is stored in front matter, mapping citation numbers to original source documents. This provides an audit trail for every piece of information, enabling verification that content accurately reflects sources.
 
-- **Optional linting**: Citations also enable optional linting similar to LLM-Wiki patterns, checking for contradictions, outdated claims, or descrepancies between Knowledge Files and their sources. In a well-organized CSKB with clear category boundaries and proper classification, the content should be internally consistent making linting unnecessary. However, citation-based validation acts as a safeguard against contamination from bad source data, extraction errors, or accidentally ingested content, and maintains content integrity.
+- **Optional linting**: Citations also enable optional linting similar to LLM-Wiki patterns, checking for contradictions, outdated claims, or descrepancies between Knowledge Files and their sources. In a well-organized CSKB with clear category boundaries and proper classification, the content should be internally consistent making regular linting unnecessary. However, citation-based validation acts as a safeguard against contamination from bad source data, extraction errors, or accidentally ingested content, and maintains content integrity.
 
 ## Note
 
 This document is intentionally abstract. It describes the pattern, not a specific implementation. The exact graph schema, the metadata categories, the filename format, the query interface - all of that depends on your domain and requirements.
 
-Use this is as a starting point for your own implementation. The core innovations: content-addressed metadata, Git as temporal index, and the spatio-temporal graph structure, are the essential pieces. Everything else is negotiable.
+Use this is as a starting point for your own implementation. The core concepts: content-addressed metadata, Git as temporal index, and the spatio-temporal graph structure, are the essential pieces. Everything else is negotiable.
 
 Your implementation might use different tools, different metadata schemas, different hash functions, different query interfaces. That's expected and encouraged.
